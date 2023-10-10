@@ -1,5 +1,5 @@
 # Marquescalculater
-<!DOCTYPE html>
+
 <html lang="pt">
 
 <head>
