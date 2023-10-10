@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calculadora de Custos de Deslocação</title>
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      border-radius: 10px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #007bff;
+    }
+
+    form {
+      display: grid;
+      gap: 20px;
+    }
+
+    label {
+      font-weight: bold;
+    }
+
+    input[type="number"],
+    input[type="text"],
+    select {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 16px;
+    }
+
+    button {
+      background-color: #007bff;
+      color: #fff;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 5px;
+      font-size: 18px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #resultado {
+      margin-top: 30px;
+      text-align: center;
+    }
+
+    #total-custos {
+      font-weight: bold;
+      font-size: 24px;
+      color: #007bff;
+    }
+
+    #widget-container {
+      text-align: center;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>Calculadora de Custos de Deslocação</h1>
+    <form id="calc-form">
+      <label for="distancia">Distância (em km):</label>
+      <input type="number" id="distancia" required>
+
+      <label for="custo-combustivel">Custo do Combustível (€/l):</label>
+      <input type="number" id="custo-combustivel" required>
+
+      <label for="custo-portagens">Custo de Portagens (€):</label>
+      <input type="number" id="custo-portagens" required>
+
+      <label for="num-tecnicos">Número de Técnicos:</label>
+      <select id="num-tecnicos" required>
+        <option value="1">1 Técnico</option>
+        <option value="2">2 Técnicos</option>
+      </select>
+
+      <label for="num-horas-servico">Número de Horas de Serviço no Cliente:</label>
+      <input type="number" id="num-horas-servico" required>
+
+      <label for="custo-combustivel-camiao">Custo Total Combustível Camião (€):</label>
+      <input type="text" id="custo-combustivel-camiao" readonly>
+
+      <label for="custo-deslocacao-camiao">Custo de Deslocação do Camião (€/km):</label>
+      <input type="text" id="custo-deslocacao-camiao" readonly>
+
+      <label for="custo-manutencao-camiao">Custo de Manutenção do Camião (€/km):</label>
+      <input type="text" id="custo-manutencao-camiao" readonly>
+
+      <label for="custo-mao-de-obra">Custo de Mão de Obra (€):</label>
+      <input type="text" id="custo-mao-de-obra" readonly>
+
+      <label for="custo-mao-de-obra-deslocacao">Custo de Mão de Obra em Deslocação (€):</label>
+      <input type="text" id="custo-mao-de-obra-deslocacao" readonly>
+
+      <button type="button" id="calcular">Calcular</button>
+    </form>
+
+    <div id="resultado">
+      <h2>Resultado</h2>
+      <p>Total de Custos de Deslocação: <span id="total-custos">0</span> €</p>
+    </div>
+
+    <div id="widget-container">
+      <!-- Widget de Preços de Combustível -->
+      <div id="maisgasolina-widget" data-theme="1" data-width="220"></div>
+      <script src="//static.maisgasolina.com/widget/mg.js" async></script>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById("calc-form");
+      const distanciaInput = document.getElementById("distancia");
+      const custoCombustivelInput = document.getElementById("custo-combustivel");
+      const custoPortagensInput = document.getElementById("custo-portagens");
+      const numTecnicosSelect = document.getElementById("num-tecnicos");
+      const numHorasServicoInput = document.getElementById("num-horas-servico");
+      const calcularButton = document.getElementById("calcular");
+      const totalCustosElement = document.getElementById("total-custos");
+      const custoCombustivelCaminhaoInput = document.getElementById("custo-combustivel-camiao");
+      const custoDeslocacaoCamiaoInput = document.getElementById("custo-deslocacao-camiao");
+      const custoManutencaoCamiaoInput = document.getElementById("custo-manutencao-camiao");
+      const custoMaoDeObraInput = document.getElementById("custo-mao-de-obra");
+      const custoMaoDeObraDeslocacaoInput = document.getElementById("custo-mao-de-obra-deslocacao");
+
+      calcularButton.addEventListener("click", function () {
+        const distancia = parseFloat(distanciaInput.value);
+        const custoCombustivel = parseFloat(custoCombustivelInput.value);
+        const custoPortagens = parseFloat(custoPortagensInput.value);
+        const numTecnicos = parseInt(numTecnicosSelect.value); // Obtém o número de técnicos selecionado
+        const numHorasServico = parseInt(numHorasServicoInput.value); // Obtém o número de horas de serviço
+
+        if (isNaN(distancia) || isNaN(custoCombustivel) || isNaN(custoPortagens) || isNaN(numTecnicos) || isNaN(numHorasServico)) {
+          alert("Por favor, preencha todos os campos com valores numéricos.");
+          return;
+        }
+
+        const custoCombustivelTotal = (distancia * 0.5 * custoCombustivel); // Fórmula para calcular o custo de combustível
+        const custoPortagensTotal = custoPortagens;
+        const custoDeslocacaoCamiaoTotal = 3 * distancia; // Calcula automaticamente o custo de deslocação do camião
+        const custoManutencaoCamiaoTotal = 0.10 * distancia; // Calcula automaticamente o custo de manutenção do camião
+
+        // Calcula o custo de mão de obra com base no número de técnicos, número de horas de serviço e custo por hora
+        const custoMaoDeObra = 35 * numTecnicos * numHorasServico;
+
+        // Calcula o custo de mão de obra em deslocação com base na distância e velocidade média
+        const velocidadeMedia = 80; // em km/h
+        const tempoDeViagem = distancia / velocidadeMedia; // em horas
+        const custoMaoDeObraDeslocacao = 25 * tempoDeViagem * numTecnicos;
+
+        // Calcula o custo total
+        const custoTotal = custoCombustivelTotal + custoPortagensTotal + custoDeslocacaoCamiaoTotal + custoManutencaoCamiaoTotal + custoMaoDeObra + custoMaoDeObraDeslocacao;
+
+        // Atualiza os campos de exibição com os resultados
+        custoCombustivelCaminhaoInput.value = custoCombustivelTotal.toFixed(2);
+        custoDeslocacaoCamiaoInput.value = custoDeslocacaoCamiaoTotal.toFixed(2);
+        custoManutencaoCamiaoInput.value = custoManutencaoCamiaoTotal.toFixed(2);
+        custoMaoDeObraInput.value = custoMaoDeObra.toFixed(2);
+        custoMaoDeObraDeslocacaoInput.value = custoMaoDeObraDeslocacao.toFixed(2);
+        totalCustosElement.textContent = custoTotal.toFixed(2) + " €";
+      });
+    });
+  </script>
+</body>
+
+</html>
